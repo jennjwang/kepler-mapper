@@ -6,15 +6,20 @@ import inspect
 import itertools
 import os
 import sys
+import json
 import warnings
 
 import numpy as np
+import pandas as pd
 from sklearn import cluster, preprocessing, manifold, decomposition
 from sklearn.model_selection import StratifiedKFold, KFold
 from scipy.spatial import distance
 from scipy.sparse import issparse, hstack
+from gerrychain.graph import Graph as GCGraph
+from networkx.readwrite import json_graph
 
 from .cover import Cover
+from .adapter import to_networkx
 from .nerve import GraphNerve
 from .visuals import (
     _scale_color_values,
@@ -958,6 +963,24 @@ class KeplerMapper(object):
             return cluster_members_data
         else:
             return np.array([])
+
+    def to_json(self, graph, X_projected, X_data, X_names, data_path, json_file):
+        gcgraph = GCGraph(to_networkx(graph))
+        metadata = graph["meta_data"]
+        metadata["columns"] = X_names
+        metadata["data_path"] = data_path
+
+        cluster_ids = graph["nodes"].keys()
+        filter_vals = map(lambda kv: [X_projected[n][0] for n in kv[1]], graph["nodes"].items())
+        add_df = pd.DataFrame({'cluster_ids': cluster_ids, 'filter_vals': list(filter_vals)})
+        add_df = add_df.set_index('cluster_ids')
+        gcgraph.add_data(add_df)
+        print(gcgraph.nodes['cube1_cluster0'])
+
+        graph_data = json_graph.adjacency_data(gcgraph)
+
+        with open(json_file, "w+") as f:
+            json.dump({"metadata": metadata, "graph": graph_data}, f)
 
     def _process_projection_tuple(self, projection):
         # Detect if projection is a tuple (for prediction functions)
