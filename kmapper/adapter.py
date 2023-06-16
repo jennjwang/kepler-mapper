@@ -34,7 +34,7 @@ def to_networkx(graph):
 
     return g
 
-def to_json(self, graph, X_projected, X_data, X_names, data_path, json_file, extra_vars={}):
+def to_json(graph, X_projected, X_data, X_names, data_path, json_file, extra_vars=None):
         from gerrychain.graph import Graph as GCGraph
         from networkx.readwrite import json_graph
         import json
@@ -51,7 +51,6 @@ def to_json(self, graph, X_projected, X_data, X_names, data_path, json_file, ext
         add_df = pd.DataFrame({'cluster_ids': cluster_ids, 'filter_vals': list(filter_vals)})
         add_df = add_df.set_index('cluster_ids')
         gcgraph.add_data(add_df)
-        print(gcgraph.nodes['cube1_cluster0'])
 
         graph_data = json_graph.adjacency_data(gcgraph)
 
